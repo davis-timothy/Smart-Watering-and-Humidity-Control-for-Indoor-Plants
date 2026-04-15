@@ -15,11 +15,11 @@ class SoilChip {
       // blend real input + simulation
       soil = 0.7 * soil + 0.3 * potSoil;
 
-      // ---------- ENVIRONMENTAL DRYING MODEL ----------
+      //ENVIRONMENTAL DRYING 
 
       // normalize inputs
-      float humidityFactor = (100 - humidity) / 100.0; // dry air → higher
-      float lightFactor = light / 100.0;               // bright → higher
+      float humidityFactor = (100 - humidity) / 100.0; // dry air means higher
+      float lightFactor = light / 100.0;               // bright means higher
 
       // base drying rate
       float dryingRate = 0.2;
@@ -31,7 +31,7 @@ class SoilChip {
       // apply drying
       soil -= dryingRate;
 
-      // ---------- WATERING EVENT ----------
+      //WATERING EVENT
       if (soil < 20) {
         soil = 60;
       }
