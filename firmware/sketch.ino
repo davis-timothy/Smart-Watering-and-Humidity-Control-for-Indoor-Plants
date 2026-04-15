@@ -3,7 +3,7 @@
 #include <WiFi.h>
 #include "mqtt_client.h"
 
-// -------------------- WIFI + MQTT --------------------
+// WIFI + MQTT
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
@@ -12,23 +12,23 @@ const char* password = "";
 
 esp_mqtt_client_handle_t client;
 
-// -------------------- PINS --------------------
+//PINS 
 #define SOIL_PIN 34
 #define LDR_PIN 35
 #define DHT_PIN 4
 #define DHT_TYPE DHT22
 
-// -------------------- ALERT THRESHOLD --------------------
+//ALERT THRESHOLD
 #define HEALTH_THRESHOLD 40
 
 DHT dht(DHT_PIN, DHT_TYPE);
 PlantChip plant;
 
-// -------------------- VARIABLES --------------------
+// VARIABLES
 float humidity = 60;
 float previousSoil = 60;
 
-// -------------------- SETUP --------------------
+// SETUP 
 void setup() {
   Serial.begin(115200);
   dht.begin();
@@ -51,13 +51,13 @@ void setup() {
   Serial.println("MQTT client started");
 }
 
-// -------------------- LOOP --------------------
+//LOOP
 void loop() {
 
-  // ---------- TIMESTAMP ----------
+  //TIMESTAMP
   unsigned long timestamp = millis();
 
-  // ---------- RAW READINGS ----------
+  // RAW READINGS
   int soilRaw = analogRead(SOIL_PIN);
   int potSoil = map(soilRaw, 0, 4095, 0, 100);
 
@@ -69,17 +69,17 @@ void loop() {
   if (humidity < 40) humidity = 40;
   if (humidity > 80) humidity = 80;
 
-  // ---------- CHIP UPDATE ----------
+  //CHIP UPDATE 
   plant.update(potSoil, humidity, lightPercent);
 
   float soil = plant.getSoil();
   float stress = plant.getStress();
   float health = plant.getHealth();
 
-  // ---------- ALERT LOGIC ----------
+  // ALERT LOGIC 
   bool healthAlert = (health < HEALTH_THRESHOLD);
 
-  // ---------- JSON PAYLOAD ----------
+  // JSON PAYLOAD
   String payload = "{";
   payload += "\"ts\":" + String(timestamp) + ",";
   payload += "\"soil\":" + String(soil) + ",";
@@ -90,17 +90,17 @@ void loop() {
   payload += "\"alert\":" + String(healthAlert ? 1 : 0);
   payload += "}";
 
-  // ---------- MQTT PUBLISH ----------
+  //MQTT PUBLISH
   esp_mqtt_client_publish(client, MQTT_TOPIC, payload.c_str(), 0, 1, 0);
 
   Serial.print("[MQTT PUBLISH] ");
   Serial.println(payload);
 
-  // ---------- EVENTS ----------
+  //EVENTS 
   bool watered = (soil > previousSoil + 10);
   bool humidifierFlag = (soil < 30 && humidity < 45);
 
-  // ---------- OUTPUT ----------
+  //  OUTPUT
   Serial.print("Soil: ");
   Serial.print(soil);
   Serial.print("% | Humidity: ");
