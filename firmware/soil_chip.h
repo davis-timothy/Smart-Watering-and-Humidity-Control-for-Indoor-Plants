@@ -12,36 +12,34 @@ class SoilChip {
 
     float update(int potSoil, float humidity, float light) {
 
-      // blend real input + simulation
-      soil = 0.7 * soil + 0.3 * potSoil;
+    static int lastPot = 0;
 
-      //ENVIRONMENTAL DRYING 
+    int delta = potSoil - lastPot;
 
-      // normalize inputs
-      float humidityFactor = (100 - humidity) / 100.0; // dry air means higher
-      float lightFactor = light / 100.0;               // bright means higher
-
-      // base drying rate
-      float dryingRate = 0.2;
-
-      // environmental influence
-      dryingRate += 0.6 * humidityFactor;
-      dryingRate += 0.4 * lightFactor;
-
-      // apply drying
-      soil -= dryingRate;
-
-      //WATERING EVENT
-      if (soil < 20) {
-        soil = 60;
-      }
-
-      return soil;
+    if (delta > 5) {
+      soil += delta * 0.8;
     }
 
-    float get() {
-      return soil;
+    lastPot = potSoil;
+
+    float humidityFactor = (100 - humidity) / 100.0;
+    float lightFactor = light / 100.0;
+
+    float dryingRate = .6;
+    dryingRate += .6 * humidityFactor;
+    dryingRate += .4 * lightFactor;
+
+    soil -= dryingRate;
+
+    if (soil < 30) {
+      soil = 60;
     }
+
+    if (soil > 100) soil = 100;
+    if (soil < 0) soil = 0;
+
+    return soil;
+  }
 };
 
 #endif
