@@ -1,34 +1,34 @@
 #include <DHT.h>
-#include "plant_chip.h"
 #include <WiFi.h>
 #include "mqtt_client.h"
+#include "plant_chip.h"
 
 // WIFI + MQTT
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
 
-#define MQTT_BROKER "mqtt://test.mosquitto.org"
+#define MQTT_BROKER "mqtt://broker.hivemq.com:1883"
 #define MQTT_TOPIC "eece5155/tdavis/plant"
 
 esp_mqtt_client_handle_t client;
 
-//PINS 
+// pins
 #define SOIL_PIN 34
 #define LDR_PIN 35
 #define DHT_PIN 4
 #define DHT_TYPE DHT22
 
-//ALERT THRESHOLD
+// alter threshold
 #define HEALTH_THRESHOLD 40
 
 DHT dht(DHT_PIN, DHT_TYPE);
 PlantChip plant;
 
-// VARIABLES
+// variables
 float humidity = 60;
 float previousSoil = 60;
 
-// SETUP 
+// setup
 void setup() {
   Serial.begin(115200);
   dht.begin();
@@ -51,13 +51,13 @@ void setup() {
   Serial.println("MQTT client started");
 }
 
-//LOOP
+// loop
 void loop() {
 
-  //TIMESTAMP
+  //timestamp
   unsigned long timestamp = millis();
 
-  // RAW READINGS
+  // raw readings
   int soilRaw = analogRead(SOIL_PIN);
   int potSoil = map(soilRaw, 0, 4095, 0, 100);
 
@@ -69,14 +69,14 @@ void loop() {
   if (humidity < 40) humidity = 40;
   if (humidity > 80) humidity = 80;
 
-  //CHIP UPDATE 
+  // chip update
   plant.update(potSoil, humidity, lightPercent);
 
   float soil = plant.getSoil();
   float stress = plant.getStress();
   float health = plant.getHealth();
 
-  // ALERT LOGIC 
+  // alert logic
   bool healthAlert = (health < HEALTH_THRESHOLD);
 
   // JSON PAYLOAD
@@ -90,17 +90,17 @@ void loop() {
   payload += "\"alert\":" + String(healthAlert ? 1 : 0);
   payload += "}";
 
-  //MQTT PUBLISH
+  // MQTT PUBLISH
   esp_mqtt_client_publish(client, MQTT_TOPIC, payload.c_str(), 0, 1, 0);
 
   Serial.print("[MQTT PUBLISH] ");
   Serial.println(payload);
 
-  //EVENTS 
+  // events
   bool watered = (soil > previousSoil + 10);
   bool humidifierFlag = (soil < 30 && humidity < 45);
 
-  //  OUTPUT
+  // output
   Serial.print("Soil: ");
   Serial.print(soil);
   Serial.print("% | Humidity: ");
